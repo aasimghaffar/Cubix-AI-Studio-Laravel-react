@@ -11,7 +11,7 @@ class PagesController extends Controller
     /** GET /api/pages/{slug} — public page content. */
     public function show(string $slug)
     {
-        return SitePage::where('slug', $slug)->where('published', true)->firstOrFail(['slug', 'title', 'content']);
+        return SitePage::where('slug', $slug)->where('published', true)->firstOrFail(['slug', 'title', 'content', 'layout']);
     }
 
     /** GET /api/admin/pages */
@@ -26,6 +26,7 @@ class PagesController extends Controller
         $data = $request->validate([
             'title'   => 'required|string|max:120',
             'content' => 'nullable|string',
+            'layout'  => 'sometimes|in:narrow,wide,full',
         ]);
 
         $slug = \Illuminate\Support\Str::slug($data['title']);
@@ -41,6 +42,7 @@ class PagesController extends Controller
             'title'     => 'sometimes|string|max:120',
             'content'   => 'sometimes|nullable|string',
             'published' => 'sometimes|boolean',
+            'layout'    => 'sometimes|in:narrow,wide,full',
         ]);
 
         $page->update($data);

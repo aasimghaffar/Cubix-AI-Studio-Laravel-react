@@ -21,6 +21,18 @@ class GoogleAuthController extends Controller
         return rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/');
     }
 
+    /**
+     * The redirect URI sent to Google. Built from APP_URL — never from the
+     * incoming request — because Google matches this string EXACTLY against
+     * the Authorized redirect URI list, and http://localhost:8000 and
+     * http://127.0.0.1:8000 count as two different values. Pinning it here
+     * means the URI is identical whichever address the browser used.
+     */
+    public static function redirectUri(): string
+    {
+        return rtrim(config('app.url'), '/') . '/api/auth/google/callback';
+    }
+
     /** GET /api/auth/google/redirect — sends the browser to Google's consent screen. */
     public function redirect()
     {
@@ -29,7 +41,7 @@ class GoogleAuthController extends Controller
 
         $params = http_build_query([
             'client_id'     => $clientId,
-            'redirect_uri'  => url('/api/auth/google/callback'),
+            'redirect_uri'  => self::redirectUri(),
             'response_type' => 'code',
             'scope'         => 'openid email profile',
             'prompt'        => 'select_account',
@@ -52,7 +64,7 @@ class GoogleAuthController extends Controller
                 'client_secret' => Setting::get('google_client_secret'),
                 'code'          => $code,
                 'grant_type'    => 'authorization_code',
-                'redirect_uri'  => url('/api/auth/google/callback'),
+                'redirect_uri'  => self::redirectUri(),
             ])->throw()->json();
 
             $info = Http::withToken($tokenResponse['access_token'])

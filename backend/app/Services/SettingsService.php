@@ -66,7 +66,9 @@ class SettingsService
             'brand_color'  => $this->val('brand_color', '#0ea5a4'),
             'brand_logo'   => $this->val('brand_logo'),
             'header_style' => $this->val('header_style', 'classic'),   // classic | centered | minimal
-            'footer_style' => $this->val('footer_style', 'simple'),    // simple | columns | minimal
+            'footer_style' => $this->val('footer_style', 'columns'),   // simple | columns | minimal
+            'loader_enabled' => $this->val('loader_enabled', '1'),    // branded splash screen on first load
+            'loader_style'   => $this->val('loader_style', 'neural'), // neural | node | orbit | pulse | prism
             'currency'     => $this->currency(),
             'language_switcher' => $this->val('language_switcher', 'header'), // header | footer | both | off
             'free_limit_message' => $this->val('free_limit_message', 'Your free limit for this tool is used up — choose a plan to keep creating.'),

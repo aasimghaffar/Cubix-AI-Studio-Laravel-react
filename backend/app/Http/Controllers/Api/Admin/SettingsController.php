@@ -92,6 +92,54 @@ class SettingsController extends Controller
             }
         }
 
+        // Google OAuth credentials: ask Google's token endpoint to exchange a
+        // deliberately invalid code. Google answers "invalid_client" when the
+        // ID/secret are wrong and "invalid_grant" when they are correct but the
+        // code isn't — so invalid_grant is our success signal. No user
+        // interaction and nothing is created on Google's side.
+        if ($provider === 'google') {
+            $settings = app(\App\Services\SettingsService::class);
+            $clientId = \App\Models\Setting::get('google_client_id');
+            $secret   = \App\Models\Setting::get('google_client_secret');
+
+            foreach ($overrides as $k => $v) {
+                if ($k === 'google_client_id' && $v !== '' && ! str_contains($v, '•')) $clientId = $v;
+                if ($k === 'google_client_secret' && $v !== '' && ! str_contains($v, '•')) $secret = $v;
+            }
+
+            if (! $clientId || ! $secret) {
+                return response()->json(['ok' => false, 'message' => 'Enter the Google Client ID and Secret first.']);
+            }
+            if (! str_ends_with($clientId, '.apps.googleusercontent.com')) {
+                return response()->json(['ok' => false, 'message' => 'That does not look like a Google Client ID — it should end in .apps.googleusercontent.com']);
+            }
+
+            try {
+                $res = \Illuminate\Support\Facades\Http::asForm()->timeout(20)
+                    ->post('https://oauth2.googleapis.com/token', [
+                        'client_id'     => $clientId,
+                        'client_secret' => $secret,
+                        'code'          => 'connection-test-invalid-code',
+                        'grant_type'    => 'authorization_code',
+                        'redirect_uri'  => \App\Http\Controllers\Api\GoogleAuthController::redirectUri(),
+                    ]);
+                $error = $res->json('error');
+
+                if ($error === 'invalid_grant') {
+                    return response()->json(['ok' => true, 'message' =>
+                        'Google credentials work. Authorized redirect URI must be exactly: ' .
+                        \App\Http\Controllers\Api\GoogleAuthController::redirectUri()]);
+                }
+                if ($error === 'invalid_client') {
+                    return response()->json(['ok' => false, 'message' => 'Google rejected these credentials — check the Client ID and Secret.']);
+                }
+
+                return response()->json(['ok' => false, 'message' => 'Google replied: ' . ($res->json('error_description') ?? $error ?? 'unexpected response')]);
+            } catch (\Throwable $e) {
+                return response()->json(['ok' => false, 'message' => 'Could not reach Google — check the server internet connection.']);
+            }
+        }
+
         return response()->json($ai->testConnection($provider));
     }
 }
