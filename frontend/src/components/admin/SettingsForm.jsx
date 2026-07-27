@@ -50,10 +50,15 @@ export default function SettingsForm({ title, intro, sections, saveLabel = 'Save
       <h1 className="font-display text-2xl font-bold text-white mb-1">{title}</h1>
       <p className="text-slate-400 mb-8 text-sm">{intro}</p>
 
-      {sections.map((section) => (
+      {sections.map((section) => {
+        // When the page header already shows this section's title/note (the
+        // Settings tabs pass one section through), don't repeat it inside the card.
+        const dupTitle = title === section.title
+        const dupNote = (intro ?? '') === (section.note ?? '')
+        return (
         <div key={section.title} className="card p-6 mb-5">
-          <h2 className="font-display font-semibold text-white mb-1">{section.title}</h2>
-          {section.note && <p className="text-xs text-slate-500 mb-4">{section.note}</p>}
+          {!dupTitle && <h2 className="font-display font-semibold text-white mb-1">{section.title}</h2>}
+          {section.note && !dupNote && <p className="text-xs text-slate-500 mb-4">{section.note}</p>}
           <div className="space-y-4 mt-4">
             {section.keys
               .filter((f) => !f.showWhen || (values[f.showWhen.key] ?? f.showWhen.fallback ?? 'test') === f.showWhen.value)
@@ -135,7 +140,8 @@ export default function SettingsForm({ title, intro, sections, saveLabel = 'Save
             ))}
           </div>
         </div>
-      ))}
+        )
+      })}
 
       <button className="btn-brand" onClick={save} disabled={busy}>
         {busy ? 'Saving…' : saved ? 'Saved ✓' : saveLabel}

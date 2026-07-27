@@ -45,7 +45,7 @@ export default function ToolAccessModal({ gate, toolPath, onClose }) {
           <X size={18} />
         </button>
 
-        {gate === 'login' ? <LoginPrompt toolPath={toolPath} /> : <PlansPrompt />}
+        {gate === 'login' ? <LoginPrompt toolPath={toolPath} /> : <PlansPrompt onClose={onClose} />}
       </div>
     </div>
     </Portal>
@@ -81,7 +81,7 @@ const SHORT_LABELS = {
   summarizer_credits: 'summaries',
 }
 
-function PlansPrompt() {
+function PlansPrompt({ onClose }) {
   const { branding } = useAuth()
   const { t } = useLang()
   const [packages, setPackages] = useState([])
@@ -182,7 +182,7 @@ function PlansPrompt() {
               </ul>
 
               <button onClick={() => subscribe(pkg)} disabled={busyId !== null}
-                className={`w-full mt-auto disabled:opacity-70 ${popular || mine ? 'btn-brand' : 'rounded-xl py-2.5 text-sm font-semibold border border-ink-700 text-slate-200 hover:border-brand/60 transition'}`}>
+                className="btn-brand w-full mt-auto disabled:opacity-70">
                 {busyId === pkg.id
                   ? <span className="inline-flex items-center justify-center gap-2"><Loader2 size={14} className="animate-spin" /> {t('pay.redirecting_btn', 'Redirecting…')}</span>
                   : t('pricing.choose', 'Choose plan')}
@@ -197,6 +197,12 @@ function PlansPrompt() {
         {t('gate.plans.note', 'Cancel anytime. Credits refresh every billing cycle.')}
       </p>
       <PaymentMethodsStrip className="mt-3" />
+
+      <p className="text-center text-xs mt-4">
+        <Link to="/pricing" onClick={onClose} className="text-brand hover:underline">
+          {t('gate.plans.compare', 'Compare all plans in detail →')}
+        </Link>
+      </p>
       {chooser}
     </div>
   )

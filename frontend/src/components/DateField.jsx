@@ -57,9 +57,9 @@ export default function DateField({ value, onChange, placeholder = 'Select a dat
         <span className={selected ? 'font-medium' : 'text-slate-500'}>
           {selected ? `${selected.getDate()} ${MONTHS[selected.getMonth()]} ${selected.getFullYear()}` : placeholder}
         </span>
-        <span className="grid place-items-center w-7 h-7 rounded-lg shrink-0 transition"
+        <span className="grid place-items-center w-6 h-6 rounded-md shrink-0 transition"
           style={{ background: 'linear-gradient(135deg, rgb(var(--brand) / .22), rgb(var(--accent) / .18))' }}>
-          <Calendar size={14} className="text-brand" />
+          <Calendar size={13} className="text-brand" />
         </span>
       </button>
 

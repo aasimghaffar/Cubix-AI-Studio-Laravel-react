@@ -54,8 +54,8 @@ export default function Account() {
 
       {tab === 'profile' && <ProfileTab user={user} t={t} />}
       {tab === 'plan' && <PlanTab user={user} t={t} />}
-      {tab === 'password' && <PasswordTab user={user} />}
-      {tab === 'notifications' && <NotificationsTab user={user} />}
+      {tab === 'password' && <PasswordTab user={user} t={t} />}
+      {tab === 'notifications' && <NotificationsTab user={user} t={t} />}
     </div>
   )
 }
@@ -98,37 +98,37 @@ function ProfileTab({ user, t }) {
         <div>
           <h2 className="font-display font-semibold text-white text-lg">{user?.name}</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '—'}
+            {t('acct.member_since', 'Member since')} {user?.created_at ? new Date(user.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '—'}
           </p>
         </div>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs text-slate-500 block mb-1.5">First name</label>
+          <label className="text-xs text-slate-500 block mb-1.5">{t('acct.first_name', 'First name')}</label>
           <input className="input" value={form.first_name}
             onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs text-slate-500 block mb-1.5">Last name</label>
+          <label className="text-xs text-slate-500 block mb-1.5">{t('acct.last_name', 'Last name')}</label>
           <input className="input" value={form.last_name}
             onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs text-slate-500 block mb-1.5">Date of birth</label>
+          <label className="text-xs text-slate-500 block mb-1.5">{t('acct.dob', 'Date of birth')}</label>
           <DateField value={form.date_of_birth} max={new Date().toISOString().slice(0, 10)}
-            onChange={(v) => setForm({ ...form, date_of_birth: v })} placeholder="Select your birth date" />
+            onChange={(v) => setForm({ ...form, date_of_birth: v })} placeholder={t('acct.ph_birth', "Select your birth date")} />
         </div>
         <div>
-          <label className="text-xs text-slate-500 block mb-1.5">Email <span className="text-slate-600">(sign-in email can't be changed)</span></label>
-          <input className="input opacity-60 cursor-not-allowed" value={user?.email ?? ''} readOnly />
+          <label className="text-xs text-slate-500 block mb-1.5">{t('acct.email', 'Email')} <span className="text-slate-600">{t('acct.email_locked', "(sign-in email can't be changed)")}</span></label>
+          <input className="input w-full opacity-60 cursor-not-allowed" value={user?.email ?? ''} readOnly />
         </div>
       </div>
 
       {error && <Alert type="error" className="mt-4">{error}</Alert>}
       <div className="flex items-center gap-3 mt-6">
-        <button className="btn-brand" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save profile'}</button>
-        {done && <span className="text-sm text-brand">Saved ✓</span>}
+        <button className="btn-brand" onClick={save} disabled={busy}>{busy ? t('acct.saving', 'Saving…') : t('acct.save_profile', 'Save profile')}</button>
+        {done && <span className="text-sm text-brand">{t('acct.saved', 'Saved ✓')}</span>}
       </div>
     </div>
   )
@@ -165,7 +165,7 @@ function PlanTab({ user, t }) {
       {notice && <Alert type="success" className="mb-5" onClose={() => setNotice('')}>{notice}</Alert>}
 
       <div className="card p-6 mb-5">
-        <h2 className="font-display font-semibold text-white mb-4">Current plan</h2>
+        <h2 className="font-display font-semibold text-white mb-4">{t('acct.current_plan', 'Current plan')}</h2>
         {sub ? (
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -183,7 +183,7 @@ function PlanTab({ user, t }) {
                   </p>
                 </div>
               </div>
-              <Link to="/pricing" className="text-sm text-brand hover:underline shrink-0">Change plan</Link>
+              <Link to="/pricing" className="text-sm text-brand hover:underline shrink-0">{t('acct.change_plan', 'Change plan')}</Link>
             </div>
 
             {!sub.cancel_at_period_end && (
@@ -209,8 +209,9 @@ function PlanTab({ user, t }) {
           <h2 className="font-display font-semibold text-white mb-5">{t('account.credits', 'Credits this cycle')}</h2>
           <div className="grid sm:grid-cols-2 gap-6">
             {Object.entries(meters).map(([key, m]) => (
-              <CreditMeter key={key} used={m.used} limit={m.limit} label={METER_LABELS[key] ?? key}
-                freeLabel={m.free ? 'free uses this month' : undefined} />
+              <CreditMeter key={key} used={m.used} limit={m.limit} label={t(`meter.${key}`, METER_LABELS[key] ?? key)}
+                freeLabel={m.free ? (m.renews === 'day' ? t('acct.free_today', 'free uses today') : t('acct.free_month', 'free uses this month')) : undefined}
+                renews={m.renews} />
             ))}
           </div>
         </div>
@@ -224,7 +225,7 @@ function PlanTab({ user, t }) {
               className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-ink-800 transition">
               <X size={18} />
             </button>
-            <h2 className="font-display font-semibold text-white mb-2">Cancel your subscription?</h2>
+            <h2 className="font-display font-semibold text-white mb-2">{t('acct.cancel_confirm', 'Cancel your subscription?')}</h2>
             <p className="text-sm text-slate-400 mb-6">
               Your plan will <strong className="text-white">not renew</strong>, and no further payments will be taken.
               You keep full access and your remaining credits until
@@ -235,7 +236,7 @@ function PlanTab({ user, t }) {
                 className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold bg-red-500/90 text-white hover:bg-red-500 disabled:opacity-50 transition">
                 {busy ? 'Canceling…' : 'Yes, cancel'}
               </button>
-              <button onClick={() => setConfirming(false)} className="btn-ghost flex-1">Keep plan</button>
+              <button onClick={() => setConfirming(false)} className="btn-ghost flex-1">{t('acct.keep_plan', 'Keep plan')}</button>
             </div>
           </div>
         </div>
@@ -245,7 +246,7 @@ function PlanTab({ user, t }) {
   )
 }
 
-function PasswordTab({ user }) {
+function PasswordTab({ user, t }) {
   const [form, setForm] = useState({ current_password: '', password: '', password_confirmation: '' })
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
@@ -268,35 +269,35 @@ function PasswordTab({ user }) {
   return (
     <div className="card p-7 animate-fade-up grid md:grid-cols-[1fr_260px] gap-8">
       <div>
-      <h2 className="font-display font-semibold text-white mb-1">Change password</h2>
+      <h2 className="font-display font-semibold text-white mb-1">{t('acct.change_password', 'Change password')}</h2>
       <p className="text-xs text-slate-500 mb-5">
         {viaGoogle
-          ? 'You signed up with Google. You can still set a password here to also sign in with email.'
-          : 'Use at least 8 characters.'}
+          ? t('acct.pw_google', 'You signed up with Google. You can still set a password here to also sign in with email.')
+          : t('acct.pw_min', 'Use at least 8 characters.')}
       </p>
       <div className="space-y-3">
-        <input className="input" type="password" placeholder="Current password" value={form.current_password}
+        <input className="input" type="password" placeholder={t('acct.ph_current_pw', "Current password")} value={form.current_password}
           onChange={(e) => setForm({ ...form, current_password: e.target.value })} />
-        <input className="input" type="password" placeholder="New password (min 8)" value={form.password}
+        <input className="input" type="password" placeholder={t('acct.ph_new_pw', "New password (min 8)")} value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })} />
-        <input className="input" type="password" placeholder="Confirm new password" value={form.password_confirmation}
+        <input className="input" type="password" placeholder={t('acct.ph_confirm_pw', "Confirm new password")} value={form.password_confirmation}
           onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} />
         {error && <Alert type="error">{error}</Alert>}
-        {done && <Alert type="success">Password updated successfully.</Alert>}
+        {done && <Alert type="success">{t('acct.pw_updated', 'Password updated successfully.')}</Alert>}
         <button className="btn-brand w-full" onClick={save} disabled={busy}>
-          {busy ? 'Saving…' : 'Update password'}
+          {busy ? t('acct.saving', 'Saving…') : t('acct.update_password', 'Update password')}
         </button>
       </div>
       </div>
 
       {/* Tips column keeps the card the same size as the other tabs */}
       <div className="hidden md:block border-l border-ink-700/60 pl-8">
-        <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">Strong password tips</p>
+        <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">{t('acct.pw_tips', 'Strong password tips')}</p>
         <ul className="space-y-2.5 text-xs text-slate-400 leading-relaxed">
-          <li>• Use 12+ characters when possible</li>
-          <li>• Mix letters, numbers, and symbols</li>
-          <li>• Avoid names, birthdays, and reused passwords</li>
-          <li>• A short sentence works great: "coffee-at-9-tastes-best!"</li>
+          <li>• {t('acct.tip1', 'Use 12+ characters when possible')}</li>
+          <li>• {t('acct.tip2', 'Mix letters, numbers, and symbols')}</li>
+          <li>• {t('acct.tip3', 'Avoid names, birthdays, and reused passwords')}</li>
+          <li>• {t('acct.tip4', 'A short sentence works great: "coffee-at-9-tastes-best!"')}</li>
         </ul>
       </div>
     </div>
@@ -304,12 +305,12 @@ function PasswordTab({ user }) {
 }
 
 const NOTIFY_TYPES = [
-  { key: 'plan_purchased', label: 'Plan purchase receipts', hint: 'When a plan is purchased or assigned to your account' },
-  { key: 'plan_expiry', label: 'Plan expiry reminders', hint: 'A heads-up before your plan renews or expires' },
-  { key: 'account_updates', label: 'Account updates', hint: 'Important changes to your account status' },
+  { key: 'plan_purchased', tkey: 'notif.purchase', label: 'Plan purchase receipts', hintKey: 'notif.purchase_sub', hint: 'When a plan is purchased or assigned to your account' },
+  { key: 'plan_expiry', tkey: 'notif.expiry', label: 'Plan expiry reminders', hintKey: 'notif.expiry_sub', hint: 'A heads-up before your plan renews or expires' },
+  { key: 'account_updates', tkey: 'notif.updates', label: 'Account updates', hintKey: 'notif.updates_sub', hint: 'Important changes to your account status' },
 ]
 
-function NotificationsTab({ user }) {
+function NotificationsTab({ user, t }) {
   const { refresh } = useAuth()
   const [prefs, setPrefs] = useState({ all: true, plan_purchased: true, plan_expiry: true, account_updates: true, ...(user?.notify_prefs ?? {}) })
   const [saved, setSaved] = useState(false)
@@ -332,17 +333,17 @@ function NotificationsTab({ user }) {
   return (
     <div className="card p-6 animate-fade-up">
       <div className="flex items-center justify-between gap-3 mb-1">
-        <h2 className="font-display font-semibold text-white">Email notifications</h2>
-        {saved && <span className="text-xs text-brand">Saved ✓</span>}
+        <h2 className="font-display font-semibold text-white">{t('acct.email_notifs', 'Email notifications')}</h2>
+        {saved && <span className="text-xs text-brand">{t('acct.saved', 'Saved ✓')}</span>}
       </div>
-      <p className="text-xs text-slate-500 mb-6">Choose which emails you receive. Security emails (like verification) are always sent.</p>
+      <p className="text-xs text-slate-500 mb-6">{t('acct.notifs_sub', 'Choose which emails you receive. Security emails (like verification) are always sent.')}</p>
 
       <div className="space-y-4">
-        {NOTIFY_TYPES.map(({ key, label, hint }) => (
+        {NOTIFY_TYPES.map(({ key, tkey, label, hintKey, hint }) => (
           <label key={key} className={`flex items-start justify-between gap-4 ${allOff ? 'opacity-40 pointer-events-none' : ''}`}>
             <span>
-              <span className="block text-sm text-white">{label}</span>
-              <span className="block text-xs text-slate-500 mt-0.5">{hint}</span>
+              <span className="block text-sm text-white">{t(tkey, label)}</span>
+              <span className="block text-xs text-slate-500 mt-0.5">{t(hintKey, hint)}</span>
             </span>
             <Toggle checked={prefs[key] !== false} onChange={(v) => save({ ...prefs, [key]: v })} disabled={busy} />
           </label>
@@ -350,8 +351,8 @@ function NotificationsTab({ user }) {
 
         <div className="border-t border-ink-700/60 pt-4 flex items-start justify-between gap-4">
           <span>
-            <span className="block text-sm text-white">Disable all notifications</span>
-            <span className="block text-xs text-slate-500 mt-0.5">Turn off every optional email in one switch</span>
+            <span className="block text-sm text-white">{t('acct.disable_all', 'Disable all notifications')}</span>
+            <span className="block text-xs text-slate-500 mt-0.5">{t('acct.disable_all_sub', 'Turn off every optional email in one switch')}</span>
           </span>
           <Toggle checked={allOff} onChange={(v) => save({ ...prefs, all: !v })} disabled={busy} danger />
         </div>

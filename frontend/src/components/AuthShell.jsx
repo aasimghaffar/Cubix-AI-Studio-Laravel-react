@@ -23,15 +23,38 @@ export default function AuthShell({ children }) {
     <div className="min-h-screen grid lg:grid-cols-2 relative">
       <FxBackground />
       {/* ── Form side ── */}
-      <div className="relative z-10 flex flex-col p-6 sm:p-10">
-        <Link to="/" className="inline-flex items-center gap-2 mb-10 self-start">
+      <div className="relative z-10 flex flex-col px-5 py-8 sm:p-10">
+        {/* Logo: centred on phones, left aligned once the showcase panel appears */}
+        <Link to="/" className="inline-flex items-center gap-2 mb-8 lg:mb-10 self-center lg:self-start">
           {branding.brand_logo
             ? <img src={branding.brand_logo} alt={branding.brand_name} className="h-8 w-auto max-w-[140px] object-contain" />
             : <Sparkles className="text-brand" size={22} />}
-          <span className="font-display font-bold text-white">{branding.brand_name}</span>
+          <span className="font-display font-bold text-white text-lg">{branding.brand_name}</span>
         </Link>
-        <div className="flex-1 grid place-items-center">
-          <div className="relative z-10 w-full max-w-sm animate-fade-up glass-window p-8 spotlight">{children}</div>
+
+        <div className="flex-1 flex flex-col justify-center w-full max-w-sm mx-auto">
+          {/* Compact promise line — phones only, since the showcase panel
+              carries this message from lg upwards. Kept to one short line so
+              the form itself stays above the fold. */}
+          <p className="lg:hidden text-center text-sm text-slate-400 mb-5 px-2">
+            {t('hero.subtitle', 'One dashboard, one subscription — every AI tool you need.')}
+          </p>
+
+          <div className="relative z-10 w-full animate-fade-up glass-window p-6 sm:p-8 spotlight">
+            {children}
+          </div>
+
+          {/* Trust points, phones only. A single column with a fixed icon
+              gutter — wrapping text stays aligned under itself instead of
+              running back under the icon. */}
+          <ul className="lg:hidden mt-7 space-y-2.5 mx-auto w-full max-w-[19rem]">
+            {points.map(({ icon: Icon, text }) => (
+              <li key={text} className="grid grid-cols-[18px_1fr] items-start gap-2.5">
+                <Icon size={13} className="text-brand mt-[3px]" />
+                <span className="text-[12px] leading-relaxed text-slate-400">{text}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 

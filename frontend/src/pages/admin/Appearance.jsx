@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, ImageUp, Loader2, Trash2 } from 'lucide-react'
+import { Check, CheckCircle2, ImageUp, Loader2, Trash2 } from 'lucide-react'
 import { api } from '../../lib/api'
-import SettingsForm from '../../components/admin/SettingsForm'
-
-
-const THEME_SECTIONS = [
-  { title: 'Theme & colors', note: 'Give visitors a dark/light switch, and optionally set your own background and text colors for each mode. Leave a color empty to use the built-in design.', keys: [
-    { key: 'theme_toggle_enabled', label: 'Show the dark / light mode switch to visitors', type: 'toggle' },
-    { key: 'theme_dark_bg', label: 'Dark mode — background color', type: 'color' },
-    { key: 'theme_dark_text', label: 'Dark mode — text color', type: 'color' },
-    { key: 'theme_light_bg', label: 'Light mode — background color', type: 'color' },
-    { key: 'theme_light_text', label: 'Light mode — text color', type: 'color' },
-  ]},
-]
+import { LoaderArt } from '../../components/SiteLoader'
 
 const HEADER_STYLES = [
   {
@@ -79,7 +68,12 @@ const FOOTER_STYLES = [
 ]
 
 export default function Appearance() {
-  const [values, setValues] = useState({ brand_name: '', brand_color: '', header_style: 'classic', footer_style: 'simple' })
+  const [values, setValues] = useState({
+    brand_name: '', brand_color: '', header_style: 'classic', footer_style: 'columns',
+    theme_toggle_enabled: '1', theme_dark_bg: '', theme_dark_text: '',
+    theme_light_bg: '', theme_light_text: '',
+    loader_enabled: '1', loader_style: 'neural',
+  })
   const [logo, setLogo] = useState(null)
   const [busy, setBusy] = useState(false)
   const [logoBusy, setLogoBusy] = useState(false)
@@ -92,11 +86,20 @@ export default function Appearance() {
         brand_name: b.brand_name ?? '',
         brand_color: b.brand_color ?? '#0ea5a4',
         header_style: b.header_style ?? 'classic',
-        footer_style: b.footer_style ?? 'simple',
+        footer_style: b.footer_style ?? 'columns',
+        theme_toggle_enabled: b.theme_toggle === false ? '0' : '1',
+        theme_dark_bg: b.theme_colors?.dark_bg ?? '',
+        theme_dark_text: b.theme_colors?.dark_text ?? '',
+        theme_light_bg: b.theme_colors?.light_bg ?? '',
+        theme_light_text: b.theme_colors?.light_text ?? '',
+        loader_enabled: (b.loader_enabled === '1' || b.loader_enabled === true) ? '1' : '0',
+        loader_style: b.loader_style ?? 'neural',
       })
       setLogo(b.brand_logo)
     }).catch(() => {})
   }, [])
+
+  const set = (patch) => { setValues((v) => ({ ...v, ...patch })); setSaved(false) }
 
   const save = async () => {
     setBusy(true); setSaved(false); setError('')
@@ -202,14 +205,69 @@ export default function Appearance() {
         onChange={(v) => setValues({ ...values, footer_style: v })}
       />
 
+      {/* ── Theme & colors ── */}
+      <div className="card p-6 mb-5">
+        <h2 className="font-display font-semibold text-white mb-1">Theme & colors</h2>
+        <p className="text-xs text-slate-500 mb-5">
+          Give visitors a dark/light switch, and optionally set your own background and
+          text colors for each mode. Leave a color empty to use the built-in design.
+        </p>
+
+        <label className="flex items-start gap-2.5 cursor-pointer mb-5">
+          <input type="checkbox" className="accent-[rgb(var(--brand))] mt-0.5"
+            checked={values.theme_toggle_enabled === '1'}
+            onChange={(e) => set({ theme_toggle_enabled: e.target.checked ? '1' : '0' })} />
+          <span className="text-sm text-slate-200">Show the dark / light mode switch to visitors</span>
+        </label>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[
+            ['theme_dark_bg', 'Dark mode — background color'],
+            ['theme_dark_text', 'Dark mode — text color'],
+            ['theme_light_bg', 'Light mode — background color'],
+            ['theme_light_text', 'Light mode — text color'],
+          ].map(([key, label]) => (
+            <div key={key}>
+              <label className="text-xs text-slate-400 block mb-1.5">{label}</label>
+              <div className="flex items-center gap-2">
+                <input type="color" className="w-11 h-11 rounded-lg bg-transparent border border-ink-700 cursor-pointer p-1"
+                  value={values[key] || '#0b1220'} onChange={(e) => set({ [key]: e.target.value })} />
+                <input className="input flex-1" placeholder="Leave empty for the default"
+                  value={values[key] ?? ''} onChange={(e) => set({ [key]: e.target.value })} />
+                {values[key] && (
+                  <button type="button" title="Clear" onClick={() => set({ [key]: '' })}
+                    className="p-2 rounded-lg border border-ink-700 text-slate-400 hover:text-red-400">
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Loader ── */}
+      <div className="card p-6 mb-5">
+        <h2 className="font-display font-semibold text-white mb-1">Loader</h2>
+        <p className="text-xs text-slate-500 mb-5">
+          An optional splash screen shown while the site loads. It appears once per
+          visit, fades out on its own, and never delays the page by more than a moment.
+        </p>
+        <LoaderPicker
+          enabled={values.loader_enabled === '1'}
+          style={values.loader_style}
+          onChange={(patch) => set(patch)}
+        />
+      </div>
+
       {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
-      <button className="btn-brand" onClick={save} disabled={busy}>
-        {busy ? 'Saving…' : saved ? 'Saved ✓' : 'Save appearance'}
-      </button>
-      <section className="mt-12">
-        <h2 className="font-display text-lg font-semibold text-white mb-4">Theme & colors</h2>
-        <SettingsForm sections={THEME_SECTIONS} />
-      </section>
+
+      {/* One save button for the whole page */}
+      <div className="sticky bottom-4 z-10">
+        <button className="btn-brand !px-8 shadow-2xl" onClick={save} disabled={busy}>
+          {busy ? 'Saving…' : saved ? 'Saved ✓' : 'Save appearance'}
+        </button>
+      </div>
     </div>
   )
 }
@@ -236,3 +294,57 @@ function StylePicker({ title, options, value, onChange }) {
     </div>
   )
 }
+
+
+/** Live, animated previews so the admin picks by eye rather than by name.
+ *  Fully controlled — the parent owns the values and the single save button. */
+function LoaderPicker({ enabled, style, onChange }) {
+  return (
+    <div>
+      <label className="flex items-start gap-2.5 cursor-pointer mb-6">
+        <input type="checkbox" checked={enabled} className="accent-[rgb(var(--brand))] mt-0.5"
+          onChange={(e) => onChange({ loader_enabled: e.target.checked ? '1' : '0' })} />
+        <span>
+          <span className="block text-sm text-white">Show the loading screen</span>
+          <span className="block text-xs text-slate-500 mt-0.5">
+            Turn this off and visitors go straight to the site.
+          </span>
+        </span>
+      </label>
+
+      <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">Choose a style</p>
+      <div className={`grid sm:grid-cols-2 xl:grid-cols-3 gap-4 ${enabled ? '' : 'opacity-50 pointer-events-none'}`}>
+        {LOADER_STYLES.map((opt) => (
+          <button key={opt.id} type="button"
+            onClick={() => onChange({ loader_style: opt.id })}
+            className={`relative rounded-2xl border-2 p-4 text-left transition ${
+              style === opt.id ? 'border-brand bg-brand/5' : 'border-ink-700 hover:border-brand/50'
+            }`}>
+            {style === opt.id && (
+              <span className="absolute top-3 right-3 w-5 h-5 rounded-full grid place-items-center text-ink-950 z-10"
+                style={{ background: 'linear-gradient(135deg, rgb(var(--brand)), rgb(var(--accent)))' }}>
+                <Check size={12} />
+              </span>
+            )}
+            {/* the real animation, running live */}
+            <div className="rounded-xl bg-ink-950/70 grid place-items-center h-40 mb-3 overflow-hidden">
+              <div className="scale-[0.72]">
+                <LoaderArt style={opt.id} brandName="Preview" />
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-white">{opt.name}</p>
+            <p className="text-xs text-slate-500 mt-0.5 leading-snug">{opt.desc}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const LOADER_STYLES = [
+  { id: 'neural', name: 'Neural network', desc: 'Nodes firing along connecting lines — signature AI look.' },
+  { id: 'node', name: 'AI node', desc: 'Glass card with a pulsing core, orbiting dot and waveform.' },
+  { id: 'orbit', name: 'Orbit rings', desc: 'Three counter-rotating rings around a glowing core.' },
+  { id: 'pulse', name: 'Sonar pulse', desc: 'Calm expanding rings radiating from a bright centre.' },
+  { id: 'prism', name: 'Prism fold', desc: 'Three squares folding through each other in sequence.' },
+]

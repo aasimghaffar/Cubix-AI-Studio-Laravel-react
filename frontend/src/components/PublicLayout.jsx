@@ -270,7 +270,7 @@ export default function PublicLayout() {
   useEffect(() => { setMobileOpen(false); window.scrollTo({ top: 0, left: 0, behavior: 'instant' }) }, [location.pathname])
 
   const headerStyle = branding.header_style ?? 'classic'
-  const footerStyle = branding.footer_style ?? 'simple'
+  const footerStyle = branding.footer_style ?? 'columns'
   // Main menu in the footer too — flattened, submenu children included
   const footerMenu = (menu ?? []).flatMap((m) => (m.children?.length ? m.children : [m])).filter((m) => m.target !== '#')
   const actionProps = { user, loading, branding, logout, navigate, menuOpen, setMenuOpen, menuRef }
@@ -492,27 +492,27 @@ function NewsletterBox() {
   const [email, setEmail] = useState('')
   const [state, setState] = useState(null) // null | busy | ok | error-string
   const send = async () => {
-    if (!email.includes('@')) { setState('Enter a valid email address.'); return }
+    if (!email.includes('@')) { setState(t('footer.bad_email', 'Enter a valid email address.')); return }
     setState('busy')
     try {
       await api('/contact', { method: 'POST', body: { name: 'Newsletter signup', email, subject: 'Newsletter subscription', message: `Please add ${email} to the newsletter list.` } })
       setState('ok')
     } catch {
-      setState('Could not subscribe right now — please try again.')
+      setState(t('footer.sub_failed', 'Could not subscribe right now — please try again.'))
     }
   }
   return (
     <div className="mt-5">
       <p className="footer-heading">{t('footer.newsletter', 'Stay in the loop')}</p>
       {state === 'ok' ? (
-        <p className="text-sm text-brand">You're subscribed — welcome aboard! ✦</p>
+        <p className="text-sm text-brand">{t('footer.subscribed', "You're subscribed — welcome aboard!")}</p>
       ) : (
         <div className="flex gap-2">
           <input className="input !py-2 text-sm flex-1" type="email" placeholder="you@email.com"
             value={email} onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && send()} />
           <button className="btn-brand !px-4 !py-2 text-sm magnetic" onClick={send} disabled={state === 'busy'}>
-            {state === 'busy' ? '…' : 'Join'}
+            {state === 'busy' ? '…' : t('footer.join', 'Join')}
           </button>
         </div>
       )}

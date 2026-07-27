@@ -9,6 +9,7 @@ export default function Pages() {
   const [selected, setSelected] = useState(null)
   const [content, setContent] = useState('')
   const [title, setTitle] = useState('')
+  const [layout, setLayout] = useState('narrow')
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -23,12 +24,13 @@ export default function Pages() {
     setSelected(page)
     setTitle(page.title)
     setContent(page.content ?? '')
+    setLayout(page.layout ?? 'narrow')
     setSaved(false)
   }
 
   const save = async () => {
     setBusy(true); setSaved(false)
-    const updated = await api(`/admin/pages/${selected.id}`, { method: 'PUT', body: { title, content } })
+    const updated = await api(`/admin/pages/${selected.id}`, { method: 'PUT', body: { title, content, layout } })
     setBusy(false); setSaved(true)
     setPages((p) => p.map((x) => x.id === updated.id ? updated : x))
     setTimeout(() => setSaved(false), 2500)
@@ -89,6 +91,13 @@ export default function Pages() {
             <div className="flex flex-wrap items-center gap-3">
               <input className="input flex-1 !w-auto min-w-40 font-display font-semibold"
                 value={title} onChange={(e) => setTitle(e.target.value)} />
+              <select value={layout} onChange={(e) => { setLayout(e.target.value); setSaved(false) }}
+                title="Page width"
+                className="bg-ink-800 border border-ink-700 rounded-xl px-3 py-2.5 text-sm text-slate-200">
+                <option value="narrow">Narrow — reading width (Terms, Privacy)</option>
+                <option value="wide">Wide — landing width (FAQ, features)</option>
+                <option value="full">Full width — edge to edge</option>
+              </select>
               <a href={`/p/${selected.slug}`} target="_blank" rel="noreferrer"
                 className="btn-ghost !py-2 text-xs" title="View on site">
                 <ExternalLink size={14} /> /p/{selected.slug}

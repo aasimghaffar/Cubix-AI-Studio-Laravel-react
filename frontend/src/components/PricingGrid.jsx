@@ -53,7 +53,9 @@ export function CycleTabs({ cycle, setCycle, className = '' }) {
         <span aria-hidden
           className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-full transition-all duration-300 ease-out"
           style={{
-            left: cycle === 'monthly' ? '6px' : 'calc(50%)',
+            // logical property: maps to left in LTR and right in RTL, so the
+            // thumb follows the reversed button order in Arabic automatically
+            insetInlineStart: cycle === 'monthly' ? '6px' : 'calc(50%)',
             background: 'linear-gradient(90deg, rgb(var(--brand)), rgb(var(--accent)))',
           }} />
         {['monthly', 'yearly'].map((c) => (
@@ -104,17 +106,19 @@ export default function PricingGrid({ visible, onChoose, buttonLabel, busyId = n
             )}
 
             <h3 className="font-display font-semibold text-white text-lg">{t(`package.${pkg.id}.name`, pkg.name)}</h3>
-            <p className="mt-3 mb-6">
-              {pkg.discount_percent ? (
-                <span className="inline-flex flex-col items-start gap-0.5">
-                  <span className="text-sm text-slate-500 line-through">{fmtPrice(Math.round(pkg.price / (1 - pkg.discount_percent / 100)), branding)}</span>
-                  <span className="font-display text-4xl font-bold text-white">{fmtPrice(pkg.price, branding)}</span>
+            <div className="mt-3 mb-6">
+              {pkg.discount_percent > 0 && (
+                <span className="block text-sm text-slate-500 line-through mb-0.5">
+                  {fmtPrice(Math.round(pkg.price / (1 - pkg.discount_percent / 100)), branding)}
                 </span>
-              ) : (
-                <span className="font-display text-4xl font-bold text-white">{fmtPrice(pkg.price, branding)}</span>
               )}
-              <span className="text-slate-400"> / {pkg.billing_cycle === 'yearly' ? t('pricing.year', 'year') : t('pricing.month', 'month')}</span>
-            </p>
+              <span className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="font-display text-4xl font-bold text-white">{fmtPrice(pkg.price, branding)}</span>
+                <span className="text-slate-400 text-sm">
+                  / {pkg.billing_cycle === 'yearly' ? t('pricing.year', 'year') : t('pricing.month', 'month')}
+                </span>
+              </span>
+            </div>
 
             <ul className="space-y-2.5 mb-7 flex-1">
               {orderedFeatures(pkg.features).map(([key, value]) => (

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import PublicLayout from './components/PublicLayout'
+import SiteLoader from './components/SiteLoader'
 import NotFound from './pages/NotFound'
 import AdminLayout from './components/AdminLayout'
 import Home from './pages/public/Home'
@@ -49,48 +50,51 @@ function RequireAdmin({ children }) {
 
 export default function App() {
   return (
-    <Routes>
-      {/* ── Everything customer-facing lives on the public site ── */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/tools" element={<Tools />} />
-        <Route path="/tools/:slug" element={<ToolWorkspace />} />
-        <Route path="/pricing" element={<PublicPricing />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/p/:slug" element={<Page />} />
-        <Route path="/account" element={<RequireAuth><Account /></RequireAuth>} />
-      </Route>
+    <>
+      <SiteLoader />
+      <Routes>
+        {/* ── Everything customer-facing lives on the public site ── */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/tools" element={<Tools />} />
+          <Route path="/tools/:slug" element={<ToolWorkspace />} />
+          <Route path="/pricing" element={<PublicPricing />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/p/:slug" element={<Page />} />
+          <Route path="/account" element={<RequireAuth><Account /></RequireAuth>} />
+        </Route>
 
-      {/* ── Auth ── */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/auth/google" element={<GoogleCallback />} />
-      <Route path="/register" element={<Register />} />
+        {/* ── Auth ── */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/auth/google" element={<GoogleCallback />} />
+        <Route path="/register" element={<Register />} />
 
-      {/* ── Admin panel ── */}
-      <Route element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/packages" element={<AdminPackages />} />
-        <Route path="/admin/customers" element={<AdminCustomers />} />
-        <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-        <Route path="/admin/tools" element={<AdminToolsManager />} />
-        <Route path="/admin/tools/:id" element={<ToolEditor />} />
-        <Route path="/admin/usage" element={<AdminUsageLogs />} />
-        <Route path="/admin/messages" element={<AdminMessages />} />
-        <Route path="/admin/appearance" element={<AdminAppearance />} />
-        <Route path="/admin/languages" element={<AdminLanguages />} />
-        <Route path="/admin/pages" element={<AdminPages />} />
-        <Route path="/admin/menu" element={<AdminMenuManager />} />
-        <Route path="/admin/taxonomies" element={<AdminTaxonomies />} />
-        <Route path="/admin/shortcodes" element={<AdminShortcodes />} />
-        <Route path="/admin/testimonials" element={<AdminTestimonials />} />
-        <Route path="/admin/engines" element={<AdminAiEngines />} />
-        <Route path="/admin/keys" element={<AdminApiKeys />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
-      </Route>
+        {/* ── Admin panel ── */}
+        <Route element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/packages" element={<AdminPackages />} />
+          <Route path="/admin/customers" element={<AdminCustomers />} />
+          <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+          <Route path="/admin/tools" element={<AdminToolsManager />} />
+          <Route path="/admin/tools/:id" element={<ToolEditor />} />
+          <Route path="/admin/usage" element={<AdminUsageLogs />} />
+          <Route path="/admin/messages" element={<AdminMessages />} />
+          <Route path="/admin/appearance" element={<AdminAppearance />} />
+          <Route path="/admin/languages" element={<AdminLanguages />} />
+          <Route path="/admin/pages" element={<AdminPages />} />
+          <Route path="/admin/menu" element={<AdminMenuManager />} />
+          <Route path="/admin/taxonomies" element={<AdminTaxonomies />} />
+          <Route path="/admin/shortcodes" element={<AdminShortcodes />} />
+          <Route path="/admin/testimonials" element={<AdminTestimonials />} />
+          <Route path="/admin/engines" element={<AdminAiEngines />} />
+          <Route path="/admin/keys" element={<AdminApiKeys />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+        </Route>
 
-      <Route path="*" element={<PublicLayout />}>
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+        <Route path="*" element={<PublicLayout />}>
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </>
   )
 }

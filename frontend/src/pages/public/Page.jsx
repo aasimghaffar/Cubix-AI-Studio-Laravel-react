@@ -49,7 +49,9 @@ export default function Page() {
         </div>
       )}
 
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 py-16 animate-fade-up">
+      <div className={`relative mx-auto px-4 sm:px-6 py-16 animate-fade-up ${
+        page.layout === 'full' ? 'max-w-none' : page.layout === 'wide' ? 'max-w-6xl' : 'max-w-3xl'
+      }`}>
         <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-8">{t(`page.${slug}.title`, page.title)}</h1>
         <div className="page-content text-slate-300 leading-relaxed space-y-4">
           {renderWithShortcodes(t(`page.${slug}.content`, page.content ?? ''))}

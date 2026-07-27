@@ -15,12 +15,12 @@ const SECTIONS = [
     { key: 'business_email', label: 'Business email (shown on Contact page)' },
     { key: 'business_phone', label: 'Phone number' },
     { key: 'business_address', label: 'Address', type: 'longtext' },
-    { key: 'mail_from_address', label: 'Customer emails are sent FROM this address' },
+    { key: 'mail_from_address', label: 'Customer emails are sent from this address' },
   ]},
-  { title: 'Sign-in options', note: 'Google login: create OAuth credentials at console.cloud.google.com → APIs & Services → Credentials. Authorized redirect URI must be exactly:  <your-backend-url>/api/auth/google/callback  (e.g. http://localhost:8000/api/auth/google/callback). The buttons appear on Login and Register automatically when enabled.', keys: [
+  { title: 'Sign-in options', note: 'Google login: create OAuth credentials at console.cloud.google.com → APIs & Services → Credentials → Create OAuth client ID → Web application. The Authorized redirect URI must match your APP_URL in .env EXACTLY, including 127.0.0.1 vs localhost — these are different addresses to Google. With the default local setup that value is: http://127.0.0.1:8000/api/auth/google/callback — also add your live URL before going live. If Google shows "Access blocked: this request is invalid", the redirect URI does not match, or the OAuth consent screen has not been completed (fill in App name + User support email + Developer contact, then Save). While the consent screen is in Testing mode, add your own Google address under Audience → Test users. The buttons appear on Login and Register automatically when enabled.', keys: [
     { key: 'google_login_enabled', label: 'Enable "Continue with Google" button', type: 'toggle' },
     { key: 'google_client_id', label: 'Google OAuth Client ID' },
-    { key: 'google_client_secret', label: 'Google OAuth Client Secret', provider: 'google' },
+    { key: 'google_client_secret', label: 'Google OAuth Client Secret', provider: 'google', testable: true },
   ]},
   { title: 'Payments', note: 'Turn each payment method on or off. Stripe Price IDs are OPTIONAL now — prices are generated automatically from each package; attach an ID only if you prefer managing prices in the Stripe dashboard. PayPal needs only a Client ID + Secret from developer.paypal.com (plans are created automatically too).', keys: [
     { key: 'stripe_enabled', label: 'Accept card payments (Stripe)', type: 'toggle' },

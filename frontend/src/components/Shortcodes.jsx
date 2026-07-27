@@ -1,74 +1,77 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { api } from '../lib/api'
+import PricingGrid, { usePackages, CycleTabs } from './PricingGrid'
+import { useCheckout, PaymentMethodsStrip } from './GatewayChooser'
+import { useToolGate } from './useToolGate'
+import Alert from './Alert'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LanguageContext'
 import { fmtPrice } from '../lib/format'
 
 /** [pricing] — compact pricing grid with cycle tabs + discounts. */
 export function PricingBlock() {
-  const { branding } = useAuth()
-  const [packages, setPackages] = useState([])
-  const [cycle, setCycle] = useState('monthly')
-  useEffect(() => { api('/packages').then(setPackages).catch(() => {}) }, [])
+  const [error, setError] = useState('')
+  const { visible, cycle, setCycle, hasBoth, packages } = usePackages()
+  const { start, chooser, busyId } = useCheckout(setError)
+  const { user } = useAuth()
+  const navigate = useNavigate()
 
-  const cycles = new Set(packages.map((p) => p.billing_cycle))
-  const hasBoth = cycles.has('monthly') && cycles.has('yearly')
-  const visible = hasBoth ? packages.filter((p) => p.billing_cycle === cycle) : packages
   if (packages.length === 0) return null
 
+  // Same behaviour as the pricing page: signed-out visitors go to register.
+  const choose = (pkg) => (user ? start(pkg) : navigate('/register'))
+
   return (
-    <div className="my-10 not-prose">
-      {hasBoth && (
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex rounded-xl border border-ink-700 overflow-hidden">
-            {['monthly', 'yearly'].map((c) => (
-              <button key={c} onClick={() => setCycle(c)}
-                className={`px-5 py-2 text-sm capitalize ${cycle === c ? 'bg-brand text-ink-950 font-semibold' : 'text-slate-300 hover:bg-ink-800'}`}>{c}</button>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {visible.map((pkg) => (
-          <div key={pkg.id} className="card glow-hover p-6 relative overflow-hidden">
-            {pkg.discount_percent > 0 && <span className="ribbon-off">{pkg.discount_percent}% off</span>}
-            <p className="font-display font-semibold text-white mb-2">{pkg.name}</p>
-            <p className="mb-4">
-              {pkg.discount_percent > 0 && (
-                <span className="text-sm text-slate-500 line-through mr-2">{fmtPrice(Math.round(pkg.price / (1 - pkg.discount_percent / 100)), branding)}</span>
-              )}
-              <span className="font-display text-3xl font-bold text-white">{fmtPrice(pkg.price, branding)}</span>
-              <span className="text-slate-400 text-sm"> / {pkg.billing_cycle === 'yearly' ? 'year' : 'month'}</span>
-            </p>
-            <Link to="/pricing" className="btn-brand w-full !py-2 text-sm">Choose plan</Link>
-          </div>
-        ))}
+    <div className="my-12 not-prose shortcode-bleed">
+      <div className="shortcode-inner">
+        {hasBoth && <CycleTabs cycle={cycle} setCycle={setCycle} className="mb-8" />}
+        {error && <Alert type="error" className="mb-5">{error}</Alert>}
+        <PricingGrid visible={visible} onChoose={choose} busyId={busyId} />
+        <PaymentMethodsStrip className="mt-8" />
+        {chooser}
       </div>
     </div>
   )
 }
 
-/** [tools] — clickable tool cards. */
 export function ToolsBlock() {
   const { t } = useLang()
   const [tools, setTools] = useState([])
+  // Same gate as the home page: signed-out or plan-less visitors get the
+  // login / choose-a-plan popup instead of landing on a locked workspace.
+  const { openTool, modal } = useToolGate()
+
   useEffect(() => { api('/tools').then((d) => setTools(d.tools)).catch(() => {}) }, [])
   if (tools.length === 0) return null
 
   return (
-    <div className="my-10 not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {tools.map((tool) => {
-        const Icon = Icons[tool.icon] || Icons.Wand2
-        return (
-          <Link key={tool.slug} to={`/tools/${tool.slug}`} className="card glow-hover p-5 block">
-            <span className="icon-tile !p-2.5 mb-3"><Icon size={18} /></span>
-            <p className="font-display font-semibold text-white text-sm">{t(`tool.${tool.slug}.name`, tool.name)}</p>
-            <p className="text-xs text-slate-400 mt-1 line-clamp-2">{t(`tool.${tool.slug}.desc`, tool.description)}</p>
-          </Link>
-        )
-      })}
+    <div className="my-12 not-prose shortcode-bleed">
+      <div className="shortcode-inner">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {tools.map((tool) => {
+          const Icon = Icons[tool.icon] || Icons.Wand2
+          return (
+            <button key={tool.slug} onClick={() => openTool(tool)}
+              className="card-glow glow-hover border-anim card-laminate p-6 text-center group">
+              {tool.free_enabled && (
+                <span className="inline-block text-[10px] uppercase tracking-widest text-ink-950 font-bold bg-brand rounded-full px-2.5 py-1 mb-3">
+                  {t('free.badge', 'Free')}
+                </span>
+              )}
+              <span className="icon-tile mb-4 block mx-auto w-fit"><Icon size={22} /></span>
+              <h3 className="font-display font-semibold text-white">{t(`tool.${tool.slug}.name`, tool.name)}</h3>
+              <p className="text-sm text-slate-400 mt-1 mb-4">{t(`tool.${tool.slug}.desc`, tool.description)}</p>
+              <span className="inline-flex items-center gap-1.5 text-sm text-brand">
+                {t('toolkit.try', 'Try it')} <Icons.ArrowRight size={14} className="transition group-hover:translate-x-1" />
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      {modal}
+      </div>
     </div>
   )
 }
